@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, Dimensions, Platform} from 'react-native';
+import {View, Text, Dimensions, Platform, PanResponder} from 'react-native';
 
 import {Svg, Circle, Rect, Path, Line} from 'react-native-svg';
 
@@ -10,7 +10,7 @@ const CLOCK_RADIUS = 120;
 export default class App extends React.Component {
   constructor() {
     super();
-
+    this.panResponder;
     this.state = {
       windowWidth: Dimensions.get('window').width,
       windowHeight: Dimensions.get('window').height,
@@ -75,85 +75,99 @@ export default class App extends React.Component {
 
       plusWidth: 40,
       plusHeight: 40,
+
+      startTouchX: 0,
+      startTouchY: 0,
+
+      endTouchX: 0,
+      endTouchY: 0,
     };
+
+    this.panResponder = PanResponder.create({
+      onStartShouldSetPanResponder: (event, gestureState) => true,
+      onStartShouldSetPanResponderCapture: (event, gestureState) => {
+        // console.warn(event.nativeEvent.locationX);
+        this.setState({
+          startTouchX: event.nativeEvent.locationX.toFixed(2),
+          startTouchY: event.nativeEvent.locationY.toFixed(2),
+          endTouchX: event.nativeEvent.locationX.toFixed(2),
+          endTouchY: event.nativeEvent.locationY.toFixed(2),
+        });
+      },
+      onMoveShouldSetPanResponder: (event, gestureState) => false,
+      onMoveShouldSetPanResponderCapture: (event, gestureState) => false,
+      onPanResponderGrant: (event, gestureState) => false,
+      onPanResponderMove: (event, gestureState) => {
+        this.setState({
+          endTouchX: event.nativeEvent.locationX.toFixed(2),
+          endTouchY: event.nativeEvent.locationY.toFixed(2),
+        });
+      },
+      onPanResponderRelease: (event, gestureState) => {
+        // console.warn(event.nativeEvent.locationX);
+        this.setState({
+          endTouchX: event.nativeEvent.locationX.toFixed(2),
+          endTouchY: event.nativeEvent.locationY.toFixed(2),
+        });
+      },
+    });
   }
 
-  onTouchEvent = (ev, rangeNo, type) => {
-    let {line1From} = this.state;
-    let line = {};
-    if (type == 'up') {
-      line = {
-        ...line1From,
-        x1: ev.nativeEvent.locationX,
-        y1: ev.nativeEvent.locationY,
-      };
-    } else if (type == 'down') {
-      line = {
-        ...line1From,
-        x2: ev.nativeEvent.locationX,
-        y2: ev.nativeEvent.locationY,
-      };
-    } else {
-      let xdiff = line1From.x2 - line1From.x1;
-      let ydiff = line1From.y2 - line1From.y1;
+  // onTouchEvent = (ev, rangeNo, type) => {
+  //   let {line1From} = this.state;
+  //   let line = {};
+  //   if (type == 'up') {
+  //     line = {
+  //       ...line1From,
+  //       x1: ev.nativeEvent.locationX,
+  //       y1: ev.nativeEvent.locationY,
+  //     };
+  //   } else if (type == 'down') {
+  //     line = {
+  //       ...line1From,
+  //       x2: ev.nativeEvent.locationX,
+  //       y2: ev.nativeEvent.locationY,
+  //     };
+  //   } else {
+  //     let xdiff = line1From.x2 - line1From.x1;
+  //     let ydiff = line1From.y2 - line1From.y1;
 
-      line = {
-        x1: ev.nativeEvent.locationX,
-        y1: ev.nativeEvent.locationY,
-        x2: ev.nativeEvent.locationX + xdiff,
-        y2: ev.nativeEvent.locationX + ydiff,
-      };
-    }
-    this.setState({line1From: line});
-  };
+  //     line = {
+  //       x1: ev.nativeEvent.locationX,
+  //       y1: ev.nativeEvent.locationY,
+  //       x2: ev.nativeEvent.locationX + xdiff,
+  //       y2: ev.nativeEvent.locationX + ydiff,
+  //     };
+  //   }
+  //   this.setState({line1From: line});
+  // };
 
   render() {
+    let {startTouchY, startTouchX, endTouchY, endTouchX} = this.state;
+    let {height, width} = Dimensions.get('window');
     return (
       <View style={{flex: 1}}>
-        <Svg
-          width="100%"
-          height="100%"
-          style={{marginBottom: 10}}
-          onLayout={event => {
-            const layout = event.nativeEvent.layout;
-            if (layout.x > 0 && layout.y > 0) {
-              this.setState({
-                svg: {
-                  x: layout.x,
-                  y: layout.y,
-                  width: SVG_WIDTH,
-                  height: SVG_HEIGHT,
-                },
-              });
-            }
-          }}>
-          {/* <Rect
-            x="0"
-            y="0"
-            width={SVG_WIDTH}
-            height={SVG_HEIGHT}
-            fill="green"
-          /> */}
-
+        <Svg width={width} height={height} position="absolute">
           <Line
-            x1={this.state.line1From.x1}
-            y1={this.state.line1From.y1}
-            x2={this.state.line1From.x2}
-            y2={this.state.line1From.y2}
+            x1={startTouchX}
+            y1={startTouchY}
+            x2={endTouchX}
+            y2={endTouchY}
             strokeWidth="5"
             stroke="blue"
-            onStartShouldSetResponder={ev => true}
-            onMoveShouldSetResponder={ev => true}
-            onResponderGrant={ev => {
-              this.onTouchEvent(ev, 1, 'both');
-              return true;
-            }}
-            onResponderMove={ev => {
-              this.onTouchEvent(ev, 1, 'both');
-              return true;
-            }}
+            // onStartShouldSetResponder={ev => true}
+            // onMoveShouldSetResponder={ev => true}
+            // onResponderGrant={ev => {
+            //   this.onTouchEvent(ev, 1, 'both');
+            //   return true;
+            // }}
+            // onResponderMove={ev => {
+            //   this.onTouchEvent(ev, 1, 'both');
+            //   return true;
+            // }}
           />
-          <Circle
+
+          {/* <Circle
             x={this.state.line1From.x1}
             y={this.state.line1From.y1}
             stroke="blue"
@@ -190,7 +204,7 @@ export default class App extends React.Component {
               this.onTouchEvent(ev, 1, 'down');
               return true;
             }}
-          />
+          /> */}
           {/* <Line
             onStartShouldSetResponder={ev => true}
             onMoveShouldSetResponder={ev => true}
@@ -222,6 +236,15 @@ export default class App extends React.Component {
             origin={SVG_WIDTH / 2 + ',' + SVG_HEIGHT / 2}
           /> */}
         </Svg>
+        <View
+          style={{
+            height,
+            width,
+            backgroundColor: 'transparent',
+            position: 'absolute',
+          }}
+          {...this.panResponder.panHandlers}
+        />
       </View>
     );
   }
