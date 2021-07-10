@@ -1,7 +1,15 @@
 import React from 'react';
-import {View, Text, Dimensions, Platform, PanResponder} from 'react-native';
+import {
+  View,
+  Text,
+  Dimensions,
+  Platform,
+  PanResponder,
+  TouchableOpacity,
+} from 'react-native';
 
 import {Svg, Circle, Rect, Path, Line} from 'react-native-svg';
+import Video from 'react-native-video';
 
 const SVG_WIDTH = 280;
 const SVG_HEIGHT = 280;
@@ -81,6 +89,8 @@ export default class App extends React.Component {
 
       endTouchX: 0,
       endTouchY: 0,
+
+      data: [],
     };
 
     this.panResponder = PanResponder.create({
@@ -104,14 +114,32 @@ export default class App extends React.Component {
         });
       },
       onPanResponderRelease: (event, gestureState) => {
-        // console.warn(event.nativeEvent.locationX);
+        console.log(event.nativeEvent);
+        let data = [
+          ...this.state.data,
+          {
+            endTouchX: event.nativeEvent.locationX.toFixed(2),
+            endTouchY: event.nativeEvent.locationY.toFixed(2),
+            startTouchX: this.state.startTouchX,
+            startTouchY: this.state.startTouchY,
+          },
+        ];
         this.setState({
-          endTouchX: event.nativeEvent.locationX.toFixed(2),
-          endTouchY: event.nativeEvent.locationY.toFixed(2),
+          endTouchX: 0,
+          endTouchY: 0,
+          startTouchY: 0,
+          startTouchX: 0,
+          data,
         });
       },
     });
   }
+
+  undo = () => {
+    let {data} = this.state;
+    data.pop();
+    this.setState({data});
+  };
 
   // onTouchEvent = (ev, rangeNo, type) => {
   //   let {line1From} = this.state;
@@ -143,11 +171,54 @@ export default class App extends React.Component {
   // };
 
   render() {
-    let {startTouchY, startTouchX, endTouchY, endTouchX} = this.state;
+    let {startTouchY, startTouchX, endTouchY, endTouchX, data} = this.state;
     let {height, width} = Dimensions.get('window');
     return (
       <View style={{flex: 1}}>
-        <Svg width={width} height={height} position="absolute">
+        <Video
+          source={{
+            uri: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+          }}
+          style={{width, height, position: 'absolute'}}
+          resizeMode="stretch"
+          controls={true}
+          co
+        />
+        <Svg width={width} height={height - 50} position="absolute">
+          {data.map(val => {
+            return (
+              <>
+                <Line
+                  x1={val.startTouchX}
+                  y1={val.startTouchY}
+                  x2={val.endTouchX}
+                  y2={val.endTouchY}
+                  strokeWidth="5"
+                  stroke="blue"
+                />
+                {/* 
+                <Circle
+                  x={endTouchX}
+                  y={endTouchY}
+                  stroke="blue"
+                  strokeWidth="5"
+                  cx={-4}
+                  cy={-4}
+                  r={38}
+                  onStartShouldSetResponder={ev => true}
+                  onMoveShouldSetResponder={ev => true}
+                  onResponderGrant={ev => {
+                    this.onTouchEvent(ev, 1, 'up');
+                    return true;
+                  }}
+                  onResponderMove={ev => {
+                    this.onTouchEvent(ev, 1, 'up');
+                    return true;
+                  }}
+                /> */}
+              </>
+            );
+          })}
           <Line
             x1={startTouchX}
             y1={startTouchY}
@@ -155,96 +226,28 @@ export default class App extends React.Component {
             y2={endTouchY}
             strokeWidth="5"
             stroke="blue"
-            // onStartShouldSetResponder={ev => true}
-            // onMoveShouldSetResponder={ev => true}
-            // onResponderGrant={ev => {
-            //   this.onTouchEvent(ev, 1, 'both');
-            //   return true;
-            // }}
-            // onResponderMove={ev => {
-            //   this.onTouchEvent(ev, 1, 'both');
-            //   return true;
-            // }}
           />
-
-          {/* <Circle
-            x={this.state.line1From.x1}
-            y={this.state.line1From.y1}
-            stroke="blue"
-            strokeWidth="5"
-            cx={-4}
-            cy={-4}
-            r={8}
-            onStartShouldSetResponder={ev => true}
-            onMoveShouldSetResponder={ev => true}
-            onResponderGrant={ev => {
-              this.onTouchEvent(ev, 1, 'up');
-              return true;
-            }}
-            onResponderMove={ev => {
-              this.onTouchEvent(ev, 1, 'up');
-              return true;
-            }}
-          />
-          <Circle
-            x={this.state.line1From.x2}
-            y={this.state.line1From.y2}
-            stroke="blue"
-            strokeWidth="5"
-            cx={4}
-            cy={4}
-            r={8}
-            onStartShouldSetResponder={ev => true}
-            onMoveShouldSetResponder={ev => true}
-            onResponderGrant={ev => {
-              this.onTouchEvent(ev, 1, 'down');
-              return true;
-            }}
-            onResponderMove={ev => {
-              this.onTouchEvent(ev, 1, 'down');
-              return true;
-            }}
-          /> */}
-          {/* <Line
-            onStartShouldSetResponder={ev => true}
-            onMoveShouldSetResponder={ev => true}
-            onResponderGrant={ev => {
-              this.onTouchEvent(ev, 2, 'from');
-              return true;
-            }}
-            onResponderMove={ev => {
-              this.onTouchEvent(ev, 2, 'from');
-              return true;
-            }}
-            x1={this.state.line2From.x1}
-            y1={this.state.line2From.y1}
-            x2={this.state.line2From.x2}
-            y2={this.state.line2From.y2}
-            stroke="blue"
-            strokeWidth="5"
-          /> */}
-
-          {/* <Path
-            onStartShouldSetResponder={ev => true}
-            onMoveShouldSetResponder={ev => true}
-            onResponderGrant={ev => this.onTouchEvent(ev, 1, 'from')}
-            onResponderMove={ev => this.onTouchEvent(ev, 1, 'from')}
-            d={this.state.roundedRect}
-            stroke="none"
-            fill="#9D49F2"
-            rotation={this.state.range1.rectFromRotation}
-            origin={SVG_WIDTH / 2 + ',' + SVG_HEIGHT / 2}
-          /> */}
         </Svg>
         <View
           style={{
-            height,
+            height: height - 50,
             width,
             backgroundColor: 'transparent',
-            position: 'absolute',
+            // position: 'absolute',
           }}
           {...this.panResponder.panHandlers}
         />
+        <View
+          style={{
+            backgroundColor: 'transparent',
+            position: 'absolute',
+          }}>
+          <TouchableOpacity
+            onPress={() => this.undo()}
+            style={{paddingHorizontal: 10, paddingVertical: 10, margin: 20}}>
+            <Text>undo</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
