@@ -182,7 +182,7 @@ export default class App extends React.Component {
           style={{width, height, position: 'absolute'}}
           resizeMode="stretch"
           controls={true}
-          co
+          onLoad={()=>console.warn("loaded")}
         />
         <Svg width={width} height={height - 50} position="absolute">
           {data.map(val => {
